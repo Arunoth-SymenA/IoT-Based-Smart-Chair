@@ -1,22 +1,15 @@
 import streamlit as st
-from datetime import datetime
-import pandas as pd
-import joblib
-import plotly.express as px
-import plotly.graph_objects as go
-import numpy as np
-import time
-import win10toast
-from win10toast import ToastNotifier  # Notification library for Windows
-
-# Set page configuration
 st.set_page_config(
     page_title="Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations",
     layout="wide"
 )
 
-# Initialize Windows toast notifier for notifications
-toaster = ToastNotifier()
+import pandas as pd
+import joblib
+from datetime import datetime
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
 # Load model
 @st.cache_resource
@@ -109,10 +102,18 @@ page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Ana
 # ---------------------------------------
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📌 **Problem Statement**")
-st.sidebar.markdown("""The modern lifestyle's shift towards prolonged sedentary activities has led to a surge in health issues such as poor posture, musculoskeletal disorders, obesity, cardiovascular diseases, and mental health concerns. Conventional chairs and workspaces offer no active monitoring or corrective feedback, making users unaware of the harmful effects of improper sitting posture over extended periods.""")
+st.sidebar.markdown("""
+The modern lifestyle's shift towards prolonged sedentary activities—driven by desk-bound jobs, remote work, and digital screen usage—has led to a surge in health issues such as poor posture, musculoskeletal disorders, obesity, cardiovascular diseases, and mental health concerns.
+
+Conventional chairs and workspaces offer no active monitoring or corrective feedback, making users unaware of the harmful effects of improper sitting posture over extended periods.
+""")
 
 st.sidebar.markdown("### 💡 **Proposed Solution**")
-st.sidebar.markdown("""To address these challenges, we propose the development of an **IoT-based Smart Chair system integrated with Machine Learning**. This chair will continuously monitor posture, detect anomalies, predict health risks, and offer real-time feedback via LED and mobile notifications — promoting healthier sitting habits and well-being.""")
+st.sidebar.markdown("""
+To address these challenges, we propose the development of an **IoT-based Smart Chair system integrated with Machine Learning**.
+
+This chair will continuously monitor posture, detect anomalies, predict health risks, and offer real-time feedback via LED and mobile notifications — promoting healthier sitting habits and well-being.
+""")
 
 if page != "About":
     selected_date = st.date_input("📅 Select a date", datetime.today().date())
@@ -143,15 +144,12 @@ if page == "Live Analytics":
         st.metric("Temperature", f"{latest['MPUTemp']} °C")
         st.metric("Humidity", f"{latest['DHTHumidity']} %")
 
-        # Send notification if posture quality is bad
-        if posture_quality_map[posture] == "Bad":
-            toaster.show_toast("Bad Posture Detected!", "Please adjust your posture to avoid health risks.", duration=10)
-
         # 1. Posture Count
         st.subheader("📊 Posture Frequency")
         posture_counts = filtered_df['Posture_Name'].value_counts().reset_index()
         posture_counts.columns = ['Posture', 'Count']
-        fig1 = px.bar(posture_counts, x='Posture', y='Count', title="Posture Count (hover to see exact)", hover_data=["Count"])
+        fig1 = px.bar(posture_counts, x='Posture', y='Count',
+                      title="Posture Count (hover to see exact)", hover_data=["Count"])
         st.plotly_chart(fig1, use_container_width=True)
 
         # 2. Quality Over Time
@@ -191,13 +189,33 @@ if page == "Live Analytics":
 
         # 📥 Download button
         st.subheader("📥 Download Daily Report")
-        csv = filtered_df.to_csv(index=False)
+        csv = filtered_df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="Download CSV",
+            label="Download Report as CSV",
             data=csv,
-            file_name=f"posture_data_{selected_date}.csv",
-            mime="text/csv"
+            file_name=f"smart_chair_report_{selected_date}.csv",
+            mime='text/csv'
         )
+
+    else:
+        st.warning("No data available for this date.")
+
+# ---------------------------------------
+# 🔵 DETAILED ANALYTICS
+# ---------------------------------------
+elif page == "Detailed Analytics":
+    st.title("📊 Environmental Sensor Trends")
+
+    if not filtered_df.empty:
+        for col in ['MPUTemp', 'DHTHumidity', 'DHTTemp']:
+            if col in filtered_df.columns:
+                fig = px.line(filtered_df, x='Timestamp', y=col, title=f"{col} over Time")
+                st.plotly_chart(fig, use_container_width=True)
+
+        with st.expander("📋 Full Data View"):
+            st.dataframe(filtered_df[['Timestamp', 'MPUTemp', 'DHTHumidity', 'DHTTemp']])
+    else:
+        st.warning("No data for the selected date.")
 
 # ---------------------------------------
 # ℹ️ ABOUT PAGE
