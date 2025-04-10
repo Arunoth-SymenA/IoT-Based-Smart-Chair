@@ -61,7 +61,7 @@ if page == "🏠 Home":
     st.markdown("- **Visual LED alerts**, **Mobile app notifications**, **Personalized Streamlit insights**, **Long-term ergonomic suggestions**")
 
     st.markdown("## 🧩 **Components and Flow**")
-    st.image("https://cdn.pixabay.com/photo/2017/03/03/14/52/technology-2111326_960_720.jpg", caption="System Architecture", use_column_width=True)
+    st.image("circuit.jpg", caption="System Architecture", use_column_width=True)
     st.markdown("""
     - **ESP32 Microcontroller**: Collects and transmits sensor data
     - **12× Force Sensitive Resistors (FSRs)**: Monitor seat and back pressure
