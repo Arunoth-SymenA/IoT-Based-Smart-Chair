@@ -23,8 +23,8 @@
 #define PRESSURE_THRESHOLD 100
 
 // WiFi credentials
-const char* ssid = "Hanna7S";
-const char* password = "hanna123";
+const char* ssid = "******";
+const char* password = "*******";
 
 // Google Apps Script URL - REPLACE WITH YOUR ACTUAL URL
 const char* googleScriptUrl = "https://script.google.com/macros/s/AKfycbwFf7epl4aLooQaQuwpO4kNYRSF6kAoNyJt2rCd3dNmlJ4ajh6qG7rEZkanURfMmF3PlQ/exec";
