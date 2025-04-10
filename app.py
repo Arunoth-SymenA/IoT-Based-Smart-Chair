@@ -1,97 +1,61 @@
 import streamlit as st
-from datetime import datetime
+st.set_page_config(page_title="Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations", layout="wide")
+
 import pandas as pd
 import joblib
+from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 
-# ✅ First Streamlit config
-st.set_page_config(
-    page_title="Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations",
-    layout="wide"
-)
+# Load model
+@st.cache_resource
+def load_model():
+    return joblib.load("model.pkl")
 
-# Sidebar dropdown
-page = st.sidebar.selectbox("📄 Select Page", ["🏠 Home", "📊 Live Analytics", "🌡️ Detailed Analytics"])
+model = load_model()
 
-# Expandable Problem Statement + Proposed Solution
-with st.sidebar.expander("💡 Project Context"):
-    st.markdown("### **Problem Statement**")
-    st.write("""
-    The modern lifestyle's shift towards prolonged sedentary activities... There is a pressing need for an intelligent system...
-    """)
-    st.markdown("### **Proposed Solution**")
-    st.write("""
-    To address these challenges, we propose the development of an **IoT-based Smart Chair system integrated with Machine Learning capabilities**...
-    """)
+# Features used to train the model
+model_features = [
+    'FSR0', 'FSR1', 'FSR2', 'FSR3', 'FSR4', 'FSR5',
+    'FSR6', 'FSR7', 'FSR8', 'FSR9', 'FSR10', 'FSR11',
+    'AccelX', 'AccelY', 'AccelZ',
+    'GyroX', 'GyroY', 'GyroZ'
+]
 
-# HOME PAGE
-if page == "🏠 Home":
-    st.title("Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations")
+# Correction tips dictionary
+posture_corrections = {
+    'A': "Ideal posture! Keep your back straight, shoulders relaxed, and feet flat on the floor.",
+    'B': "Sit back and use the backrest for support.",
+    'C': "Distribute your weight evenly on both hips.",
+    'D': "Shift your weight evenly between both sides.",
+    'E': "Keep your back upright instead of reclining too much.",
+    'F': "Uncross your legs and place both feet flat on the floor.",
+    'G': "Keep both feet on the ground to maintain spinal balance.",
+    'H': "Avoid hunching forward, sit back into the chair.",
+    'I': "Move back into the seat fully for lumbar support.",
+    'J': "Uncross your legs and keep feet flat on the floor.",
+    'K': "Keep both feet grounded for better balance.",
+    'L': "Place both feet flat on the ground.",
+    'M': "Sit upright with lower back support.",
+    'N': "Move back into the chair to use lumbar support.",
+    'O': "Keep feet flat on the floor to reduce hip strain.",
+    'P': "Ensure both feet are flat on the floor.",
+    'Q': "Avoid excessive leaning back and keep your feet grounded.",
+    'R': "Uncross your legs and maintain an even weight distribution.",
+    'S': "Avoid twisting your torso for long durations.",
+    'T': "Keep your back straight and avoid constant twisting."
+}
 
-    st.markdown("## 🪑 **Smart Chair: IoT & ML-Powered Health Monitoring System**")
-    st.markdown("**Welcome to the Smart Chair Platform! 🧠💺📊**")
+# Quality levels
+posture_quality_map = {
+    'A': 'Good',
+    'C': 'Average', 'D': 'Average', 'E': 'Average', 'F': 'Average', 'G': 'Average',
+    'B': 'Bad', 'H': 'Bad', 'I': 'Bad', 'J': 'Bad', 'K': 'Bad', 'L': 'Bad', 'M': 'Bad',
+    'N': 'Bad', 'O': 'Bad', 'P': 'Bad', 'Q': 'Bad', 'R': 'Bad', 'S': 'Bad', 'T': 'Bad'
+}
 
-    st.image("im1.jpg", caption="Smart Chair Concept", use_column_width=True)
-
-    st.markdown("""
-    Our mission is to revolutionize how we sit by transforming traditional seating into a health-conscious experience...
-    """)
-
-    st.markdown("### 🔧 **Technologies Used**")
-    st.markdown("- **Internet of Things (IoT)**\n- **Machine Learning Models**\n- **Streamlit – Frontend Dashboard**\n- **Google Sheets – Real-Time Cloud Storage**")
-
-    st.markdown("## ⚙️ **How It Works**")
-    st.markdown("### **1. Data Collection**")
-    st.markdown("""
-    The chair continuously collects sensor data including:
-    - Seating pressure from **12 FSR sensors**
-    - **Posture tilt and movement** using **MPU-6050**
-    - **Ambient temperature & humidity** via the **DHT22**
-    - **Posture status feedback** using **LED indicators**
-    """)
-
-    st.markdown("### **2. Real-Time Analysis**")
-    st.markdown("Navigate to the **Posture Monitor** or **Daily Analytics** pages to view live posture data and sensor trends...")
-
-    st.markdown("### **3. Predictive Insights**")
-    st.markdown("Our system uses a pre-trained ML model to predict posture type, evaluate posture quality, and generate insights...")
-
-    st.markdown("### **4. Feedback & Recommendations**")
-    st.markdown("- **Visual LED alerts**, **Mobile app notifications**, **Personalized Streamlit insights**, **Long-term ergonomic suggestions**")
-
-    st.markdown("## 🧩 **Components and Flow**")
-    st.image("circuit.jpg", caption="System Architecture", use_column_width=True)
-    st.markdown("""
-    - **ESP32 Microcontroller**: Collects and transmits sensor data
-    - **12× Force Sensitive Resistors (FSRs)**: Monitor seat and back pressure
-    - **16-Channel Multiplexer**, **MPU-6050**, **DHT22 Sensor**, **LEDs**, **Power Supply**
-    """)
-
-    st.markdown("## 🌟 **Why Choose Our Smart Chair?**")
-    st.markdown("""
-    ✅ **Health-Focused**  
-    ✅ **Live Feedback**  
-    ✅ **Non-Invasive**  
-    ✅ **Data-Driven**  
-    ✅ **User-Centric**
-    """)
-
-    st.markdown("## 🚀 **Get Started**")
-    st.markdown("Head to the **📊 Live Analytics** page in the sidebar!")
-
-    st.markdown("## 🙋‍♂️ **About Us**")
-    st.markdown("""
-    Learn more about the vision behind this smart ergonomic solution and the team that made it possible.
-    """)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("[![GitHub](https://img.shields.io/badge/GitHub-black?style=for-the-badge&logo=github)](https://github.com/Arunoth-SymenA)")
-    with col2:
-        st.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/arunothsymen/)")
-
-# DATA FUNCTIONS & MODEL
+# Load Google Sheet data
 @st.cache_data(ttl=60)
 def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqPRHzgtmub8COW-9yQAu2qpYljeGQio6yXs5IKf5hm96dRGXsOipGGrLaH80h7AQVEbzb5lpTK9it/pub?output=csv"
@@ -101,80 +65,185 @@ def load_data():
     df['DHTHumidity'] = df['DHTHumidity'].replace(-1, pd.NA).ffill()
     return df
 
-@st.cache_resource
-def load_model():
-    return joblib.load("model.pkl")
+df = load_data()
 
-model = load_model()
-model_features = ['FSR0','FSR1','FSR2','FSR3','FSR4','FSR5','FSR6','FSR7','FSR8','FSR9','FSR10','FSR11','AccelX','AccelY','AccelZ','GyroX','GyroY','GyroZ']
-posture_quality_map = {'A':'Good','C':'Average','D':'Average','E':'Average','F':'Average','G':'Average',
-                       'B':'Bad','H':'Bad','I':'Bad','J':'Bad','K':'Bad','L':'Bad','M':'Bad','N':'Bad',
-                       'O':'Bad','P':'Bad','Q':'Bad','R':'Bad','S':'Bad','T':'Bad'}
+# Sidebar Navigation
+page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics", "About"])
 
-# PAGE: LIVE ANALYTICS
-if page == "📊 Live Analytics":
-    df = load_data()
+if page != "About":
     selected_date = st.date_input("📅 Select a date", datetime.today().date())
     filtered_df = df[df['Timestamp'].dt.date == selected_date]
 
+# ---------------------------------------
+# 🟢 LIVE ANALYTICS
+# ---------------------------------------
+if page == "Live Analytics":
+    st.title("🪑 Live Posture Monitoring & Daily Analysis")
+
     if not filtered_df.empty:
-        X = filtered_df[model_features]
-        filtered_df['Predicted_Label'] = model.predict(X)
+        # ML prediction
+        filtered_df['Predicted_Label'] = model.predict(filtered_df[model_features])
         filtered_df['Posture_Quality'] = filtered_df['Predicted_Label'].map(posture_quality_map)
         filtered_df['Hour'] = filtered_df['Timestamp'].dt.hour
-        latest = filtered_df.iloc[-1]
-        latest_posture = latest['Predicted_Label']
 
-        st.title("🪑 Smart Chair Posture - Daily Posture Analytics")
+        latest = filtered_df.iloc[-1]
+        posture = latest['Predicted_Label']
+        correction = posture_corrections.get(posture, "No correction available.")
+
+        # Current Status
         st.subheader("🧍 Current Posture")
-        st.success(f"**Posture:** `{latest_posture}`")
+        st.success(f"**Posture:** `{posture}`")
+        st.info(f"**Correction Tip:** {correction}")
         st.metric("Temperature", f"{latest['MPUTemp']} °C")
         st.metric("Humidity", f"{latest['DHTHumidity']} %")
 
-        # Graph 1: Bar - posture frequency
-        fig1 = px.bar(filtered_df['Predicted_Label'].value_counts().reset_index(), x='index', y='Predicted_Label', title="Posture Count", labels={"index":"Posture","Predicted_Label":"Count"})
+        # 1. Posture Count
+        st.subheader("📊 Posture Frequency")
+        fig1 = px.bar(filtered_df['Predicted_Label'].value_counts().reset_index(),
+                      x='index', y='Predicted_Label', labels={'index': 'Posture', 'Predicted_Label': 'Count'},
+                      title="Posture Count (hover to see exact)", hover_data=["Predicted_Label"])
         st.plotly_chart(fig1, use_container_width=True)
 
-        # Graph 2: Line - good/avg/bad
-        quality_numeric = {'Good': 2, 'Average': 1, 'Bad': 0}
-        filtered_df['Quality_Score'] = filtered_df['Posture_Quality'].map(quality_numeric)
-        fig2 = px.line(filtered_df, x='Timestamp', y='Quality_Score', title="Posture Quality Timeline")
+        # 2. Quality Over Time
+        st.subheader("📈 Posture Quality Timeline")
+        qmap = {'Bad': 0, 'Average': 1, 'Good': 2}
+        filtered_df['Quality_Score'] = filtered_df['Posture_Quality'].map(qmap)
+        fig2 = px.line(filtered_df, x='Timestamp', y='Quality_Score', title="Posture Quality (Good > Bad)")
         fig2.update_yaxes(tickvals=[0, 1, 2], ticktext=['Bad', 'Average', 'Good'])
         st.plotly_chart(fig2, use_container_width=True)
 
-        # Graph 3: Pie - posture quality share
-        fig3 = px.pie(filtered_df, names='Posture_Quality', title="Posture Quality Share")
+        # 3. Pie Chart
+        st.subheader("🥧 Posture Quality Proportion")
+        fig3 = px.pie(filtered_df['Posture_Quality'].value_counts().reset_index(),
+                      names='index', values='Posture_Quality', title="Posture Quality Distribution")
         st.plotly_chart(fig3, use_container_width=True)
 
-        # Graph 4: Bar - time spent per posture
+        # 4. Time Spent per Posture
+        st.subheader("⏱️ Time Spent per Posture")
         filtered_df['TimeSpent'] = filtered_df['Timestamp'].diff().dt.total_seconds().fillna(0)
-        time_spent = filtered_df.groupby('Predicted_Label')['TimeSpent'].sum().reset_index()
-        fig4 = px.bar(time_spent, x='Predicted_Label', y='TimeSpent', title="Time Spent in Each Posture (seconds)")
+        fig4 = px.bar(filtered_df.groupby('Predicted_Label')['TimeSpent'].sum().reset_index(),
+                      x='Predicted_Label', y='TimeSpent', title="Seconds Spent per Posture")
         st.plotly_chart(fig4, use_container_width=True)
 
-        # Graph 5: Heatmap - postures per hour
+        # 5. Heatmap by Hour
+        st.subheader("🕒 Posture Frequency by Hour")
         hourly = filtered_df.groupby(['Hour', 'Predicted_Label']).size().reset_index(name='Count')
-        fig5 = px.density_heatmap(hourly, x='Hour', y='Predicted_Label', z='Count', color_continuous_scale="Viridis", title="Posture Frequency by Hour")
+        fig5 = px.density_heatmap(hourly, x='Hour', y='Predicted_Label', z='Count', title="Heatmap by Hour")
         st.plotly_chart(fig5, use_container_width=True)
 
-        # Stat 6: Transition count
+        # 6. Transitions
+        st.subheader("🔁 Posture Transitions")
         filtered_df['Shifted'] = filtered_df['Predicted_Label'].shift()
         filtered_df['Changed'] = filtered_df['Predicted_Label'] != filtered_df['Shifted']
-        st.info(f"🔁 You changed posture **{int(filtered_df['Changed'].sum())} times** today.")
-    else:
-        st.warning("⚠️ No data available for this date.")
+        transitions = filtered_df['Changed'].sum()
+        st.info(f"🌀 You changed posture **{int(transitions)} times** today.")
 
-# PAGE: DETAILED ANALYTICS
-elif page == "🌡️ Detailed Analytics":
-    df = load_data()
-    selected_date = st.date_input("📅 Select a date", datetime.today().date(), key="detail_date")
-    filtered_df = df[df['Timestamp'].dt.date == selected_date]
-    st.title("📊 Environmental Sensor Analytics")
+    else:
+        st.warning("No data available for this date.")
+
+# ---------------------------------------
+# 🔵 DETAILED ANALYTICS
+# ---------------------------------------
+elif page == "Detailed Analytics":
+    st.title("📊 Environmental Sensor Trends")
 
     if not filtered_df.empty:
         for col in ['MPUTemp', 'DHTHumidity', 'DHTTemp']:
-            fig = px.line(filtered_df, x='Timestamp', y=col, title=f"{col} over Time")
-            st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(filtered_df[['Timestamp', 'MPUTemp', 'DHTHumidity', 'DHTTemp']])
+            if col in filtered_df.columns:
+                fig = px.line(filtered_df, x='Timestamp', y=col, title=f"{col} over Time")
+                st.plotly_chart(fig, use_container_width=True)
+
+        with st.expander("📋 Full Data View"):
+            st.dataframe(filtered_df[['Timestamp', 'MPUTemp', 'DHTHumidity', 'DHTTemp']])
     else:
-        st.warning("⚠️ No environmental data for this date.")
+        st.warning("No data for the selected date.")
+
+# ---------------------------------------
+# ℹ️ ABOUT PAGE
+# ---------------------------------------
+elif page == "About":
+    st.title("🪑 Smart Chair: IoT & ML-Powered Health Monitoring System")
+    st.image("im1.jpg", use_column_width=True)
+    st.markdown("""
+## **Welcome to the Smart Chair Platform! 🧠💺📊**
+
+Our mission is to revolutionize how we sit by transforming traditional seating into a health-conscious experience. Using advanced **IoT sensors**, **machine learning models**, and **real-time data processing**, the Smart Chair monitors posture, predicts health risks, and provides live ergonomic feedback to improve well-being.
+
+---
+
+### 🔧 **Technologies Used**
+- **Internet of Things (IoT)**
+- **Machine Learning Models**
+- **Streamlit – Frontend Dashboard**
+- **Google Sheets – Real-Time Cloud Storage**
+
+---
+
+## ⚙️ **How It Works**
+
+### 1. Data Collection
+- 12 FSR sensors (pressure)
+- MPU-6050 (tilt + movement)
+- DHT22 (temperature + humidity)
+- LED indicators for feedback
+
+### 2. Real-Time Analysis
+- ML model classifies postures
+- Dashboard shows trends and triggers alerts
+
+### 3. Predictive Insights
+- Posture prediction and evaluation
+- Daily health summaries
+
+### 4. Feedback & Recommendations
+- LED alerts + mobile notifications
+- Personalized insights on dashboard
+
+---
+
+## 🧩 Components and Flow
+""")
+    st.image("circuit.jpg", use_column_width=True)
+    st.markdown("""
+- **ESP32 Microcontroller**
+- **12× FSRs + Multiplexer**
+- **MPU-6050**
+- **DHT22**
+- **LED Feedback**
+- **Power supply**
+
+---
+
+## 🌟 Why Choose Our Smart Chair?
+✅ **Health-Focused**  
+✅ **Live Feedback**  
+✅ **Non-Invasive**  
+✅ **Data-Driven**  
+✅ **User-Centric**
+
+---
+
+## 🚀 Get Started
+Check the sidebar for:
+- **Posture Dashboard**
+- **Daily Analytics**
+- **Environment Monitoring**
+
+---
+
+## 🙋‍♂️ About Us
+
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Arunoth-SymenA)  
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/arunothsymen/)
+
+---
+
+### **Problem Statement**
+The modern sedentary lifestyle leads to posture-related health issues. Conventional furniture lacks real-time monitoring or personalized recommendations.
+
+---
+
+### **Proposed Solution**
+A smart, sensor-driven, ML-based system integrated into a chair to track posture, analyze health risks, and offer live feedback. Designed to be non-intrusive and connected.
+
+""")
