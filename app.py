@@ -4,7 +4,10 @@ import joblib
 from datetime import datetime
 import plotly.express as px
 
-# Load the pre-trained model
+# ✅ MUST be first Streamlit command
+st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
+
+# now continue...
 @st.cache_resource
 def load_model():
     return joblib.load("model.pkl")
