@@ -1,29 +1,28 @@
 import streamlit as st
-
-# ✅ MUST be the first Streamlit command
 st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
 
 import pandas as pd
 import joblib
 from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
-# Load the pre-trained model
+# Load model
 @st.cache_resource
 def load_model():
     return joblib.load("model.pkl")
 
 model = load_model()
 
-# Features used to train the model
+# Model features
 model_features = [
     'FSR0', 'FSR1', 'FSR2', 'FSR3', 'FSR4', 'FSR5',
     'FSR6', 'FSR7', 'FSR8', 'FSR9', 'FSR10', 'FSR11',
-    'AccelX', 'AccelY', 'AccelZ',
-    'GyroX', 'GyroY', 'GyroZ'
+    'AccelX', 'AccelY', 'AccelZ', 'GyroX', 'GyroY', 'GyroZ'
 ]
 
-# Posture corrections
+# Correction tips
 posture_corrections = {
     'A': "Ideal posture! Keep your back straight, shoulders relaxed, and feet flat on the floor.",
     'B': "Sit back and use the backrest for support.",
@@ -47,78 +46,113 @@ posture_corrections = {
     'T': "Keep your back straight and avoid constant twisting."
 }
 
-# Load and clean data from Google Sheet
+# Posture quality classification
+posture_quality_map = {
+    'A': 'Good',
+    'C': 'Average', 'D': 'Average', 'E': 'Average', 'F': 'Average', 'G': 'Average',
+    'B': 'Bad', 'H': 'Bad', 'I': 'Bad', 'J': 'Bad', 'K': 'Bad', 'L': 'Bad', 'M': 'Bad',
+    'N': 'Bad', 'O': 'Bad', 'P': 'Bad', 'Q': 'Bad', 'R': 'Bad', 'S': 'Bad', 'T': 'Bad'
+}
+
+# Load sheet data
 @st.cache_data(ttl=60)
 def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqPRHzgtmub8COW-9yQAu2qpYljeGQio6yXs5IKf5hm96dRGXsOipGGrLaH80h7AQVEbzb5lpTK9it/pub?output=csv"
     df = pd.read_csv(url)
-
-    # Clean timestamp
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
     df.dropna(subset=['Timestamp'], inplace=True)
-
-    # Replace -1 in DHTHumidity with previous value
     df['DHTHumidity'] = df['DHTHumidity'].replace(-1, pd.NA).ffill()
-
     return df
 
-# Load data
 df = load_data()
-
-# Page selection
 page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics"])
-
-# Date selector
 selected_date = st.date_input("📅 Select a date", datetime.today().date())
 filtered_df = df[df['Timestamp'].dt.date == selected_date]
 
-# -------------------------------
-# 🟢 PAGE 1: LIVE ANALYTICS
-# -------------------------------
+# ========================
+# LIVE ANALYTICS
+# ========================
 if page == "Live Analytics":
-    st.title("🪑 Smart Chair Posture - Live Analytics")
+    st.title("🪑 Smart Chair Posture - Daily Posture Analytics")
 
     if not filtered_df.empty:
         latest = filtered_df.iloc[-1]
 
-        # Predict using only model features
-        try:
-            input_features = latest[model_features].values.reshape(1, -1)
-            predicted_label = model.predict(input_features)[0]
-            correction = posture_corrections.get(predicted_label, "No correction available.")
-        except Exception as e:
-            predicted_label = "Unavailable"
-            correction = f"Prediction failed: {e}"
+        # Predict all postures
+        X = filtered_df[model_features]
+        predicted_labels = model.predict(X)
+        filtered_df['Predicted_Label'] = predicted_labels
+        filtered_df['Posture_Quality'] = filtered_df['Predicted_Label'].map(posture_quality_map)
+        filtered_df['Hour'] = filtered_df['Timestamp'].dt.hour
 
-        # Display results
-        st.header(f"🧍 Predicted Posture: `{predicted_label}`")
-        st.info(f"📝 Correction Tip: {correction}")
+        latest_posture = predicted_labels[-1]
+        latest_correction = posture_corrections.get(latest_posture, "No correction available.")
 
-        st.subheader("🌡️ Current Environment")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric(label="Temperature", value=f"{latest['MPUTemp']} °C")
-        with col2:
-            st.metric(label="Environmental Humidity", value=f"{latest['DHTHumidity']} %")
+        st.subheader("🧍 Current Posture")
+        st.success(f"**Posture:** `{latest_posture}`")
+        st.info(f"**Correction Tip:** {latest_correction}")
 
-        # Optional: show partial table
-        with st.expander("🔍 View Sensor Data (No Label)"):
-            cols_to_show = ['Timestamp'] + model_features + ['MPUTemp', 'DHTHumidity']
-            st.dataframe(filtered_df[cols_to_show])
+        st.metric("Temperature", f"{latest['MPUTemp']} °C")
+        st.metric("Humidity", f"{latest['DHTHumidity']} %")
+
+        # 1. 📊 Posture count
+        st.subheader("📊 Posture Frequency")
+        posture_counts = filtered_df['Predicted_Label'].value_counts().reset_index()
+        posture_counts.columns = ['Posture', 'Count']
+        fig1 = px.bar(posture_counts, x='Posture', y='Count', title="Posture Count", hover_data=['Count'])
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # 2. 📈 Quality over time
+        st.subheader("📈 Posture Quality Timeline")
+        quality_numeric = {'Good': 2, 'Average': 1, 'Bad': 0}
+        filtered_df['Quality_Score'] = filtered_df['Posture_Quality'].map(quality_numeric)
+        fig2 = px.line(filtered_df, x='Timestamp', y='Quality_Score',
+                       title="Posture Quality (Good - Avg - Bad)", markers=True)
+        fig2.update_yaxes(tickvals=[0, 1, 2], ticktext=['Bad', 'Average', 'Good'])
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # 3. 🥧 Quality pie chart
+        st.subheader("🥧 Posture Quality Breakdown")
+        quality_counts = filtered_df['Posture_Quality'].value_counts().reset_index()
+        quality_counts.columns = ['Quality', 'Count']
+        fig3 = px.pie(quality_counts, names='Quality', values='Count', title="Posture Quality Pie Chart")
+        st.plotly_chart(fig3, use_container_width=True)
+
+        # 4. ⏱️ Time spent in each posture
+        st.subheader("⏱️ Time Spent per Posture")
+        filtered_df['TimeSpent'] = filtered_df['Timestamp'].diff().dt.total_seconds().fillna(0)
+        time_spent = filtered_df.groupby('Predicted_Label')['TimeSpent'].sum().reset_index()
+        fig4 = px.bar(time_spent, x='Predicted_Label', y='TimeSpent',
+                      title="Time Spent in Each Posture (seconds)", hover_data=['TimeSpent'])
+        st.plotly_chart(fig4, use_container_width=True)
+
+        # 5. 📈 Posture frequency by hour
+        st.subheader("🕒 Posture Trends by Hour")
+        hourly = filtered_df.groupby(['Hour', 'Predicted_Label']).size().reset_index(name='Count')
+        fig5 = px.density_heatmap(hourly, x='Hour', y='Predicted_Label', z='Count', color_continuous_scale="Viridis",
+                                  title="Posture Frequency by Hour")
+        st.plotly_chart(fig5, use_container_width=True)
+
+        # 6. 🔁 Posture transitions
+        st.subheader("🔁 Posture Changes Throughout the Day")
+        filtered_df['Shifted'] = filtered_df['Predicted_Label'].shift()
+        filtered_df['Changed'] = filtered_df['Predicted_Label'] != filtered_df['Shifted']
+        transition_count = filtered_df['Changed'].sum()
+        st.info(f"🌀 You changed posture **{int(transition_count)} times** today.")
+
     else:
         st.warning("⚠️ No data available for the selected date.")
 
-# -------------------------------
-# 🔵 PAGE 2: DETAILED ANALYTICS
-# -------------------------------
+# ========================
+# DETAILED ENVIRONMENT ANALYTICS
+# ========================
 elif page == "Detailed Analytics":
-    st.title("📊 Detailed Environment Analytics")
+    st.title("📊 Detailed Environmental Analytics")
 
     if not filtered_df.empty:
         for col in ['MPUTemp', 'DHTHumidity', 'DHTTemp']:
             if col in filtered_df.columns:
-                st.subheader(f"{col} over Time")
-                fig = px.line(filtered_df, x='Timestamp', y=col, title=col)
+                fig = px.line(filtered_df, x='Timestamp', y=col, title=f"{col} over Time")
                 st.plotly_chart(fig, use_container_width=True)
 
         with st.expander("📋 Full Data View"):
