@@ -222,7 +222,7 @@ elif page == "Detailed Analytics":
 # ---------------------------------------
 elif page == "About":
     st.title("🪑 Smart Chair: IoT & ML-Powered Health Monitoring System")
-    st.image("https://cdn.pixabay.com/photo/2020/08/18/09/00/smart-technology-5496932_1280.jpg", use_column_width=True)
+    st.image("im1.jpg", use_column_width=True)
     st.markdown("""
 ## **Welcome to the Smart Chair Platform! 🧠💺📊**
 
@@ -262,7 +262,7 @@ Our mission is to revolutionize how we sit by transforming traditional seating i
 
 ## 🧩 Components and Flow
 """)
-    st.image("https://cdn.pixabay.com/photo/2016/05/05/02/37/tech-1370954_1280.jpg", use_column_width=True)
+    st.image("circuit.jpg", use_column_width=True)
     st.markdown("""
 - **ESP32 Microcontroller**
 - **12× FSRs + Multiplexer**
