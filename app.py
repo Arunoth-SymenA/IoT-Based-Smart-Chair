@@ -1,5 +1,8 @@
 import streamlit as st
-st.set_page_config(page_title="Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations", layout="wide")
+st.set_page_config(
+    page_title="Design and Implementation of IoT and ML based Smart Chair for Health Monitoring and Recommendations",
+    layout="wide"
+)
 
 import pandas as pd
 import joblib
@@ -47,7 +50,7 @@ posture_corrections = {
     'T': "Keep your back straight and avoid constant twisting."
 }
 
-# Quality levels
+# Posture quality map
 posture_quality_map = {
     'A': 'Good',
     'C': 'Average', 'D': 'Average', 'E': 'Average', 'F': 'Average', 'G': 'Average',
@@ -100,10 +103,9 @@ if page == "Live Analytics":
         # 1. Posture Count
         st.subheader("📊 Posture Frequency")
         posture_counts = filtered_df['Predicted_Label'].value_counts().reset_index()
-posture_counts.columns = ['Posture', 'Count']
-fig1 = px.bar(posture_counts, x='Posture', y='Count',
-              title="Posture Count (hover to see exact)", hover_data=["Count"])
-
+        posture_counts.columns = ['Posture', 'Count']
+        fig1 = px.bar(posture_counts, x='Posture', y='Count',
+                      title="Posture Count (hover to see exact)", hover_data=["Count"])
         st.plotly_chart(fig1, use_container_width=True)
 
         # 2. Quality Over Time
@@ -165,7 +167,7 @@ elif page == "Detailed Analytics":
 # ---------------------------------------
 elif page == "About":
     st.title("🪑 Smart Chair: IoT & ML-Powered Health Monitoring System")
-    st.image("im1.jpg", use_column_width=True)
+    st.image("https://cdn.pixabay.com/photo/2020/08/18/09/00/smart-technology-5496932_1280.jpg", use_column_width=True)
     st.markdown("""
 ## **Welcome to the Smart Chair Platform! 🧠💺📊**
 
@@ -205,7 +207,7 @@ Our mission is to revolutionize how we sit by transforming traditional seating i
 
 ## 🧩 Components and Flow
 """)
-    st.image("circuit.jpg", use_column_width=True)
+    st.image("https://cdn.pixabay.com/photo/2016/05/05/02/37/tech-1370954_1280.jpg", use_column_width=True)
     st.markdown("""
 - **ESP32 Microcontroller**
 - **12× FSRs + Multiplexer**
@@ -235,8 +237,8 @@ Check the sidebar for:
 
 ## 🙋‍♂️ About Us
 
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Arunoth-SymenA)  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/arunothsymen/)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/yourhandle)  
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://linkedin.com/in/yourhandle)
 
 ---
 
@@ -247,5 +249,4 @@ The modern sedentary lifestyle leads to posture-related health issues. Conventio
 
 ### **Proposed Solution**
 A smart, sensor-driven, ML-based system integrated into a chair to track posture, analyze health risks, and offer live feedback. Designed to be non-intrusive and connected.
-
 """)
