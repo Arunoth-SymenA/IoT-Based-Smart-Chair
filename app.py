@@ -1,13 +1,14 @@
 import streamlit as st
+
+# ✅ MUST be the first Streamlit command
+st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
+
 import pandas as pd
 import joblib
 from datetime import datetime
 import plotly.express as px
 
-# ✅ MUST be first Streamlit command
-st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
-
-# now continue...
+# Load the pre-trained model
 @st.cache_resource
 def load_model():
     return joblib.load("model.pkl")
@@ -64,8 +65,7 @@ def load_data():
 # Load data
 df = load_data()
 
-# Page configuration
-st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
+# Page selection
 page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics"])
 
 # Date selector
