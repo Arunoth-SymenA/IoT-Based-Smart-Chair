@@ -26,7 +26,7 @@ model_features = [
     'GyroX', 'GyroY', 'GyroZ'
 ]
 
-# Correction tips dictionary
+# Posture correction tips
 posture_corrections = {
     'A': "Ideal posture! Keep your back straight, shoulders relaxed, and feet flat on the floor.",
     'B': "Sit back and use the backrest for support.",
@@ -50,7 +50,31 @@ posture_corrections = {
     'T': "Keep your back straight and avoid constant twisting."
 }
 
-# Posture quality map
+# Full posture names
+posture_names = {
+    'A': "Upright sitting with backrest",
+    'B': "Leaning forward without backrest",
+    'C': "Leaning Left",
+    'D': "Leaning Right",
+    'E': "Lean back",
+    'F': "Right Leg Crossed (RLC) and upright",
+    'G': "Left Leg Crossed (LLC) and upright",
+    'H': "Leaning forward with backrest",
+    'I': "Sitting on the front edge",
+    'J': "Cross-legged",
+    'K': "Left Ankle Resting (LAR) on the right leg",
+    'L': "Right Ankle Resting (RAR) on the Left Leg",
+    'M': "Lounge",
+    'N': "Lean back and sit on the edge",
+    'O': "LAR and leaning back",
+    'P': "RAR and leaning back",
+    'Q': "RLC and leaning back",
+    'R': "LLC and leaning back",
+    'S': "Rotating the trunk (Left)",
+    'T': "Rotating the trunk (Right)"
+}
+
+# Posture quality levels
 posture_quality_map = {
     'A': 'Good',
     'C': 'Average', 'D': 'Average', 'E': 'Average', 'F': 'Average', 'G': 'Average',
@@ -87,22 +111,24 @@ if page == "Live Analytics":
         # ML prediction
         filtered_df['Predicted_Label'] = model.predict(filtered_df[model_features])
         filtered_df['Posture_Quality'] = filtered_df['Predicted_Label'].map(posture_quality_map)
+        filtered_df['Posture_Name'] = filtered_df['Predicted_Label'].map(posture_names)
         filtered_df['Hour'] = filtered_df['Timestamp'].dt.hour
 
         latest = filtered_df.iloc[-1]
         posture = latest['Predicted_Label']
         correction = posture_corrections.get(posture, "No correction available.")
+        full_posture_name = posture_names.get(posture, posture)
 
         # Current Status
         st.subheader("🧍 Current Posture")
-        st.success(f"**Posture:** `{posture}`")
+        st.success(f"**Posture:** `{posture}` – {full_posture_name}")
         st.info(f"**Correction Tip:** {correction}")
         st.metric("Temperature", f"{latest['MPUTemp']} °C")
         st.metric("Humidity", f"{latest['DHTHumidity']} %")
 
         # 1. Posture Count
         st.subheader("📊 Posture Frequency")
-        posture_counts = filtered_df['Predicted_Label'].value_counts().reset_index()
+        posture_counts = filtered_df['Posture_Name'].value_counts().reset_index()
         posture_counts.columns = ['Posture', 'Count']
         fig1 = px.bar(posture_counts, x='Posture', y='Count',
                       title="Posture Count (hover to see exact)", hover_data=["Count"])
@@ -118,29 +144,40 @@ if page == "Live Analytics":
 
         # 3. Pie Chart
         st.subheader("🥧 Posture Quality Proportion")
-        fig3 = px.pie(filtered_df['Posture_Quality'].value_counts().reset_index(),
-                      names='index', values='Posture_Quality', title="Posture Quality Distribution")
+        quality_counts = filtered_df['Posture_Quality'].value_counts().reset_index()
+        quality_counts.columns = ['Quality', 'Count']
+        fig3 = px.pie(quality_counts, names='Quality', values='Count', title="Posture Quality Distribution")
         st.plotly_chart(fig3, use_container_width=True)
 
         # 4. Time Spent per Posture
         st.subheader("⏱️ Time Spent per Posture")
         filtered_df['TimeSpent'] = filtered_df['Timestamp'].diff().dt.total_seconds().fillna(0)
-        fig4 = px.bar(filtered_df.groupby('Predicted_Label')['TimeSpent'].sum().reset_index(),
-                      x='Predicted_Label', y='TimeSpent', title="Seconds Spent per Posture")
+        time_data = filtered_df.groupby('Posture_Name')['TimeSpent'].sum().reset_index()
+        fig4 = px.bar(time_data, x='Posture_Name', y='TimeSpent', title="Seconds Spent per Posture")
         st.plotly_chart(fig4, use_container_width=True)
 
         # 5. Heatmap by Hour
         st.subheader("🕒 Posture Frequency by Hour")
-        hourly = filtered_df.groupby(['Hour', 'Predicted_Label']).size().reset_index(name='Count')
-        fig5 = px.density_heatmap(hourly, x='Hour', y='Predicted_Label', z='Count', title="Heatmap by Hour")
+        hourly = filtered_df.groupby(['Hour', 'Posture_Name']).size().reset_index(name='Count')
+        fig5 = px.density_heatmap(hourly, x='Hour', y='Posture_Name', z='Count', title="Heatmap by Hour")
         st.plotly_chart(fig5, use_container_width=True)
 
         # 6. Transitions
         st.subheader("🔁 Posture Transitions")
-        filtered_df['Shifted'] = filtered_df['Predicted_Label'].shift()
-        filtered_df['Changed'] = filtered_df['Predicted_Label'] != filtered_df['Shifted']
+        filtered_df['Shifted'] = filtered_df['Posture_Name'].shift()
+        filtered_df['Changed'] = filtered_df['Posture_Name'] != filtered_df['Shifted']
         transitions = filtered_df['Changed'].sum()
         st.info(f"🌀 You changed posture **{int(transitions)} times** today.")
+
+        # 📥 Download button
+        st.subheader("📥 Download Daily Report")
+        csv = filtered_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Download Report as CSV",
+            data=csv,
+            file_name=f"smart_chair_report_{selected_date}.csv",
+            mime='text/csv'
+        )
 
     else:
         st.warning("No data available for this date.")
@@ -173,80 +210,8 @@ elif page == "About":
 
 Our mission is to revolutionize how we sit by transforming traditional seating into a health-conscious experience. Using advanced **IoT sensors**, **machine learning models**, and **real-time data processing**, the Smart Chair monitors posture, predicts health risks, and provides live ergonomic feedback to improve well-being.
 
----
-
-### 🔧 **Technologies Used**
-- **Internet of Things (IoT)**
-- **Machine Learning Models**
-- **Streamlit – Frontend Dashboard**
-- **Google Sheets – Real-Time Cloud Storage**
-
----
-
-## ⚙️ **How It Works**
-
-### 1. Data Collection
-- 12 FSR sensors (pressure)
-- MPU-6050 (tilt + movement)
-- DHT22 (temperature + humidity)
-- LED indicators for feedback
-
-### 2. Real-Time Analysis
-- ML model classifies postures
-- Dashboard shows trends and triggers alerts
-
-### 3. Predictive Insights
-- Posture prediction and evaluation
-- Daily health summaries
-
-### 4. Feedback & Recommendations
-- LED alerts + mobile notifications
-- Personalized insights on dashboard
-
----
-
-## 🧩 Components and Flow
-""")
-    st.image("https://cdn.pixabay.com/photo/2016/05/05/02/37/tech-1370954_1280.jpg", use_column_width=True)
-    st.markdown("""
-- **ESP32 Microcontroller**
-- **12× FSRs + Multiplexer**
-- **MPU-6050**
-- **DHT22**
-- **LED Feedback**
-- **Power supply**
-
----
-
-## 🌟 Why Choose Our Smart Chair?
-✅ **Health-Focused**  
-✅ **Live Feedback**  
-✅ **Non-Invasive**  
-✅ **Data-Driven**  
-✅ **User-Centric**
-
----
-
-## 🚀 Get Started
-Check the sidebar for:
-- **Posture Dashboard**
-- **Daily Analytics**
-- **Environment Monitoring**
-
----
-
-## 🙋‍♂️ About Us
+...
 
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/yourhandle)  
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://linkedin.com/in/yourhandle)
-
----
-
-### **Problem Statement**
-The modern sedentary lifestyle leads to posture-related health issues. Conventional furniture lacks real-time monitoring or personalized recommendations.
-
----
-
-### **Proposed Solution**
-A smart, sensor-driven, ML-based system integrated into a chair to track posture, analyze health risks, and offer live feedback. Designed to be non-intrusive and connected.
 """)
