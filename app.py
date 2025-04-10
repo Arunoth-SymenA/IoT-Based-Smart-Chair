@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import time
+import win10toast
 from win10toast import ToastNotifier  # Notification library for Windows
 
 # Set page configuration
