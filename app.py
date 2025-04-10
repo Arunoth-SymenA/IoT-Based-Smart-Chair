@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 import plotly.express as px
 
-# Posture correction tips
+# Correction dictionary
 posture_corrections = {
     'A': "Ideal posture! Keep your back straight, shoulders relaxed, and feet flat on the floor.",
     'B': "Sit back and use the backrest for support.",
@@ -27,7 +27,7 @@ posture_corrections = {
     'T': "Keep your back straight and avoid constant twisting."
 }
 
-# Fetch data from Google Sheets
+# Load live data from Google Sheet
 @st.cache_data(ttl=60)
 def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqPRHzgtmub8COW-9yQAu2qpYljeGQio6yXs5IKf5hm96dRGXsOipGGrLaH80h7AQVEbzb5lpTK9it/pub?output=csv"
@@ -36,44 +36,43 @@ def load_data():
     df.dropna(subset=['Timestamp'], inplace=True)
     return df
 
-# Load the data
+# Load data
 df = load_data()
 
-# Sidebar page switch
+# Sidebar for page navigation
 page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics"])
 
-# Common date selector
+# Common calendar filter
 selected_date = st.date_input("📅 Select a date", datetime.today().date())
 filtered_df = df[df['Timestamp'].dt.date == selected_date]
 
 if page == "Live Analytics":
-    st.title("🪑 Smart Chair Posture - Live View")
+    st.title("🪑 Smart Chair Posture - Live Analytics")
 
     if not filtered_df.empty:
         latest = filtered_df.iloc[-1]
         posture = latest.get('Class_Label', 'Unknown')
-        correction = posture_corrections.get(posture, "No correction available.")
+        correction = posture_corrections.get(posture, "No correction available for this label.")
+        temp = latest.get('MPUTemp', 'N/A')
+        humidity = latest.get('DHTHumidity', 'N/A')
 
         st.header(f"🧍 Current Posture: `{posture}`")
         st.info(f"📝 Correction Tip: {correction}")
 
-        st.subheader("📊 Environment Metrics")
+        st.subheader("🌡️ Current Environment")
         col1, col2 = st.columns(2)
         with col1:
-            fig1 = px.line(filtered_df, x='Timestamp', y='MPUTemp', title='MPU Temperature')
-            st.plotly_chart(fig1, use_container_width=True)
+            st.metric(label="Temperature", value=f"{temp} °C")
         with col2:
-            fig2 = px.line(filtered_df, x='Timestamp', y='DHTHumidity', title='DHT Humidity')
-            st.plotly_chart(fig2, use_container_width=True)
+            st.metric(label="Environmental Humidity", value=f"{humidity} %")
 
-        with st.expander("🔍 View Raw Data"):
-            st.dataframe(filtered_df[['Timestamp', 'Class_Label', 'MPUTemp', 'DHTHumidity']])
+        with st.expander("🔍 View Raw Posture Data (No Sensor Values)"):
+            st.dataframe(filtered_df[['Timestamp', 'Class_Label']])
     else:
         st.warning("⚠️ No data available for the selected date.")
 
-# Second Page: Detailed Analytics
 elif page == "Detailed Analytics":
-    st.title("📊 Detailed View: Environment Metrics")
+    st.title("📊 Detailed Environment Analytics")
 
     if not filtered_df.empty:
         for col in ['MPUTemp', 'DHTHumidity', 'DHTTemp']:
@@ -81,7 +80,7 @@ elif page == "Detailed Analytics":
             fig = px.line(filtered_df, x='Timestamp', y=col, title=col)
             st.plotly_chart(fig, use_container_width=True)
 
-        with st.expander("📋 Full Data (All Three Columns)"):
+        with st.expander("📋 Full Data View"):
             st.dataframe(filtered_df[['Timestamp', 'MPUTemp', 'DHTHumidity', 'DHTTemp']])
     else:
         st.warning("⚠️ No data available for the selected date.")
