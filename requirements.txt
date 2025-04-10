@@ -4,3 +4,5 @@ plotly
 gspread
 oauth2client
 gspread-dataframe
+scikit-learn
+joblib
