@@ -1,9 +1,17 @@
 import streamlit as st
 import pandas as pd
+import joblib
 from datetime import datetime
 import plotly.express as px
 
-# Posture correction dictionary
+# Load trained model
+@st.cache_resource
+def load_model():
+    return joblib.load("model.pkl")
+
+model = load_model()
+
+# Posture correction tips
 posture_corrections = {
     'A': "Ideal posture! Keep your back straight, shoulders relaxed, and feet flat on the floor.",
     'B': "Sit back and use the backrest for support.",
@@ -33,58 +41,56 @@ def load_data():
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqPRHzgtmub8COW-9yQAu2qpYljeGQio6yXs5IKf5hm96dRGXsOipGGrLaH80h7AQVEbzb5lpTK9it/pub?output=csv"
     df = pd.read_csv(url)
 
-    # Parse timestamp
+    # Clean timestamp
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
     df.dropna(subset=['Timestamp'], inplace=True)
 
-    # Replace -1 with last valid value for DHTHumidity
-    if 'DHTHumidity' in df.columns:
-        df['DHTHumidity'] = df['DHTHumidity'].replace(-1, pd.NA).ffill()
+    # Clean DHTHumidity (-1 → last good value)
+    df['DHTHumidity'] = df['DHTHumidity'].replace(-1, pd.NA).ffill()
 
     return df
 
-# Load the data
 df = load_data()
 
-# Page selector
+# Feature columns used during model training
+feature_cols = [col for col in df.columns if col not in ['Timestamp']]  # assuming all other columns are inputs
+
+# Sidebar page switch
 st.set_page_config(page_title="Smart Chair Dashboard", layout="wide")
 page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics"])
 
-# Date filter
+# Common date selector
 selected_date = st.date_input("📅 Select a date", datetime.today().date())
 filtered_df = df[df['Timestamp'].dt.date == selected_date]
 
-# ------------------------------------
-# 🟢 PAGE 1: Live Analytics
-# ------------------------------------
+# 🟢 PAGE 1: LIVE ANALYTICS
 if page == "Live Analytics":
-    st.title("🪑 Smart Chair Posture - Live Analytics")
+    st.title("🪑 Smart Chair Posture - Live View")
 
     if not filtered_df.empty:
         latest = filtered_df.iloc[-1]
-        posture = latest.get('Class_Label', 'Unknown')
-        correction = posture_corrections.get(posture, "No correction available.")
-        temp = latest.get('MPUTemp', 'N/A')
-        humidity = latest.get('DHTHumidity', 'N/A')
 
-        st.header(f"🧍 Current Posture: `{posture}`")
+        # Predict posture using model
+        input_features = latest[feature_cols].values.reshape(1, -1)
+        predicted_label = model.predict(input_features)[0]
+        correction = posture_corrections.get(predicted_label, "No correction available.")
+
+        st.header(f"🧍 Predicted Posture: `{predicted_label}`")
         st.info(f"📝 Correction Tip: {correction}")
 
         st.subheader("🌡️ Current Environment")
         col1, col2 = st.columns(2)
         with col1:
-            st.metric(label="Temperature", value=f"{temp} °C")
+            st.metric(label="Temperature", value=f"{latest['MPUTemp']} °C")
         with col2:
-            st.metric(label="Environmental Humidity", value=f"{humidity} %")
+            st.metric(label="Environmental Humidity", value=f"{latest['DHTHumidity']} %")
 
-        with st.expander("🔍 View Raw Posture Data"):
-            st.dataframe(filtered_df[['Timestamp', 'Class_Label']])
+        with st.expander("🔍 View Data (No Class_Label)"):
+            st.dataframe(filtered_df[['Timestamp'] + feature_cols])
     else:
         st.warning("⚠️ No data available for the selected date.")
 
-# ------------------------------------
-# 🔵 PAGE 2: Detailed Analytics
-# ------------------------------------
+# 🔵 PAGE 2: DETAILED ANALYTICS
 elif page == "Detailed Analytics":
     st.title("📊 Detailed Environment Analytics")
 
