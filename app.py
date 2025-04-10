@@ -97,6 +97,24 @@ df = load_data()
 # Sidebar Navigation
 page = st.sidebar.selectbox("📄 Choose View", ["Live Analytics", "Detailed Analytics", "About"])
 
+# ---------------------------------------
+# 📌 Problem Statement & Solution in Sidebar
+# ---------------------------------------
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📌 **Problem Statement**")
+st.sidebar.markdown("""
+The modern lifestyle's shift towards prolonged sedentary activities—driven by desk-bound jobs, remote work, and digital screen usage—has led to a surge in health issues such as poor posture, musculoskeletal disorders, obesity, cardiovascular diseases, and mental health concerns.
+
+Conventional chairs and workspaces offer no active monitoring or corrective feedback, making users unaware of the harmful effects of improper sitting posture over extended periods.
+""")
+
+st.sidebar.markdown("### 💡 **Proposed Solution**")
+st.sidebar.markdown("""
+To address these challenges, we propose the development of an **IoT-based Smart Chair system integrated with Machine Learning**.
+
+This chair will continuously monitor posture, detect anomalies, predict health risks, and offer real-time feedback via LED and mobile notifications — promoting healthier sitting habits and well-being.
+""")
+
 if page != "About":
     selected_date = st.date_input("📅 Select a date", datetime.today().date())
     filtered_df = df[df['Timestamp'].dt.date == selected_date]
