@@ -6,4 +6,3 @@ oauth2client
 gspread-dataframe
 scikit-learn
 joblib
-win10toast
