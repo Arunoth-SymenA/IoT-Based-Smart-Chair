@@ -32,7 +32,7 @@ if page == "🏠 Home":
     st.markdown("## 🪑 **Smart Chair: IoT & ML-Powered Health Monitoring System**")
     st.markdown("**Welcome to the Smart Chair Platform! 🧠💺📊**")
 
-    st.image("https://cdn.pixabay.com/photo/2018/01/15/07/51/smart-3087393_960_720.jpg", caption="Smart Chair Concept", use_column_width=True)
+    st.image("im1.jpg", caption="Smart Chair Concept", use_column_width=True)
 
     st.markdown("""
     Our mission is to revolutionize how we sit by transforming traditional seating into a health-conscious experience...
@@ -61,7 +61,7 @@ if page == "🏠 Home":
     st.markdown("- **Visual LED alerts**, **Mobile app notifications**, **Personalized Streamlit insights**, **Long-term ergonomic suggestions**")
 
     st.markdown("## 🧩 **Components and Flow**")
-    st.image("circuit.jpg", caption="System Architecture", width=400, height=300)
+    st.image("circuit.jpg", caption="System Architecture", use_column_width=True)
     st.markdown("""
     - **ESP32 Microcontroller**: Collects and transmits sensor data
     - **12× Force Sensitive Resistors (FSRs)**: Monitor seat and back pressure
