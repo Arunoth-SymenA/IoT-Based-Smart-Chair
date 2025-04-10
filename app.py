@@ -99,9 +99,11 @@ if page == "Live Analytics":
 
         # 1. Posture Count
         st.subheader("📊 Posture Frequency")
-        fig1 = px.bar(filtered_df['Predicted_Label'].value_counts().reset_index(),
-                      x='index', y='Predicted_Label', labels={'index': 'Posture', 'Predicted_Label': 'Count'},
-                      title="Posture Count (hover to see exact)", hover_data=["Predicted_Label"])
+        posture_counts = filtered_df['Predicted_Label'].value_counts().reset_index()
+posture_counts.columns = ['Posture', 'Count']
+fig1 = px.bar(posture_counts, x='Posture', y='Count',
+              title="Posture Count (hover to see exact)", hover_data=["Count"])
+
         st.plotly_chart(fig1, use_container_width=True)
 
         # 2. Quality Over Time
