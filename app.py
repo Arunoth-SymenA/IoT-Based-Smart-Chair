@@ -61,7 +61,7 @@ if page == "🏠 Home":
     st.markdown("- **Visual LED alerts**, **Mobile app notifications**, **Personalized Streamlit insights**, **Long-term ergonomic suggestions**")
 
     st.markdown("## 🧩 **Components and Flow**")
-    st.image("circuit.jpg", caption="System Architecture", use_column_width=True)
+    st.image("circuit.jpg", caption="System Architecture", width=400, height=300)
     st.markdown("""
     - **ESP32 Microcontroller**: Collects and transmits sensor data
     - **12× Force Sensitive Resistors (FSRs)**: Monitor seat and back pressure
@@ -87,9 +87,9 @@ if page == "🏠 Home":
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("[![GitHub](https://img.shields.io/badge/GitHub-black?style=for-the-badge&logo=github)](https://github.com/yourhandle)")
+        st.markdown("[![GitHub](https://img.shields.io/badge/GitHub-black?style=for-the-badge&logo=github)](https://github.com/Arunoth-SymenA)")
     with col2:
-        st.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/yourhandle)")
+        st.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/arunothsymen/)")
 
 # DATA FUNCTIONS & MODEL
 @st.cache_data(ttl=60)
