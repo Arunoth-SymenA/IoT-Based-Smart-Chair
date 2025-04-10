@@ -210,8 +210,69 @@ elif page == "About":
 
 Our mission is to revolutionize how we sit by transforming traditional seating into a health-conscious experience. Using advanced **IoT sensors**, **machine learning models**, and **real-time data processing**, the Smart Chair monitors posture, predicts health risks, and provides live ergonomic feedback to improve well-being.
 
-...
+---
 
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/yourhandle)  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://linkedin.com/in/yourhandle)
+### 🔧 **Technologies Used**
+- **Internet of Things (IoT)**
+- **Machine Learning Models**
+- **Streamlit – Frontend Dashboard**
+- **Google Sheets – Real-Time Cloud Storage**
+
+---
+
+## ⚙️ **How It Works**
+
+### 1. Data Collection
+- 12 FSR sensors (pressure)
+- MPU-6050 (tilt + movement)
+- DHT22 (temperature + humidity)
+- LED indicators for feedback
+
+### 2. Real-Time Analysis
+- ML model classifies postures
+- Dashboard shows trends and triggers alerts
+
+### 3. Predictive Insights
+- Posture prediction and evaluation
+- Daily health summaries
+
+### 4. Feedback & Recommendations
+- LED alerts + mobile notifications
+- Personalized insights on dashboard
+
+---
+
+## 🧩 Components and Flow
 """)
+    st.image("https://cdn.pixabay.com/photo/2016/05/05/02/37/tech-1370954_1280.jpg", use_column_width=True)
+    st.markdown("""
+- **ESP32 Microcontroller**
+- **12× FSRs + Multiplexer**
+- **MPU-6050**
+- **DHT22**
+- **LED Feedback**
+- **Power supply**
+
+---
+
+## 🌟 Why Choose Our Smart Chair?
+✅ **Health-Focused**  
+✅ **Live Feedback**  
+✅ **Non-Invasive**  
+✅ **Data-Driven**  
+✅ **User-Centric**
+
+---
+
+## 🚀 Get Started
+Check the sidebar for:
+- **Posture Dashboard**
+- **Daily Analytics**
+- **Environment Monitoring**
+
+---
+
+## 🙋‍♂️ About Us
+
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://www.linkedin.com/in/arunothsymen/)  
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/arunothsymen/)
